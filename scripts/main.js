@@ -21,6 +21,8 @@ let platforms;
 let player;
 let cursors;
 let stars;
+let score = 0;
+let scoreText = "";
 
 function preload() {
     this.load.image("sky", "assets/sky.png");
@@ -92,7 +94,7 @@ function create() {
 
     this.physics.add.overlap(player, stars, collectStar, null, this);
 
-
+    scoreText = this.add.text(16, 16, "score: 0", {fontSize: "32px", fill: "#000" });
 
 };
 
@@ -123,4 +125,7 @@ function update() {
 
 function collectStar(player, star) {
     star.disableBody(true, true)
+
+    score += 10;
+    scoreText.setText("Score: " + score);
 }
