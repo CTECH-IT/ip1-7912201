@@ -1,3 +1,4 @@
+//config for phaser - canvas 600x600, arcade physics, gravity and set the scane
 let config = {
     type: Phaser.AUTO,
     width: 800,
@@ -5,7 +6,7 @@ let config = {
     physics: {
         default: "arcade",
         arcade: {
-            gravity: { y: 300 },
+            gravity: { y: 1200 },
             debug: false
         }
     },
@@ -16,23 +17,33 @@ let config = {
     }
 };
 
+//variables. cursors is for arrow keys, keys are for other key presses.
+//level is to define what level it is, 0 is title screen.
 let game = new Phaser.Game(config);
 let platforms;
 let player;
 let cursors;
+let keys;
 let stars;
+let points;
 let score = 0;
 let scoreText = "";
 let bombs;
 let level = 0;
 
+//preloads all the images in the /assets folder.
 function preload() {
     this.load.image("sky", "assets/sky.png");
     this.load.image("title", "assets/title.png");
     this.load.image("ground", "assets/platform.png");
     this.load.image("star", "assets/star.png");
+    this.load.image("badground", "assets/badground.png");
     this.load.image("bomb", "assets/bomb.png");
+    this.load.image("point", "assets/point.png");
+    this.load.image("gameover", "assets/gameover.png");
+    this.load.image("tenpoints", "assets/tenpoints.png");
     this.load.image("controls", "assets/controls.png");
+    this.load.image("badplatform", "assets/badplatform.png");
     this.load.spritesheet("dude", "assets/dude.png", 
         { frameWidth: 32, frameHeight: 48 });
 }
@@ -41,35 +52,82 @@ function create() {
     this.add.image(400, 300, "sky")
     
     platforms = this.physics.add.staticGroup();
+    badplatforms = this.physics.add.staticGroup();
 
+    //makes it so the game doesn't crash when there isn't a star or point
+    stars = this.physics.add.group({
+        key: "star",
+        setXY: {x: -600, y: 500, stepX: 70}     
+    })
+    points = this.physics.add.group({
+        key: "point",
+        setXY: {x: -100, y: 500, stepX: 70},
+    });
+
+    //if level is 0, add the title, controls, and star.
+    //else if the level is x, make level x
     platforms.create(400, 568, "ground").setScale(2).refreshBody();
     if (level == 0) {
-        this.add.image(400, 200, "title")
+        this.add.image(400, 150, "title")
         this.add.image(400, 350, "controls")
         stars = this.physics.add.group({
             key: "star",
-            repeat: 0,
-            setXY: {x: 600, y: 500, stepX: 70}
+            setXY: {x: 600, y: 500, stepX: 70}     
         })
-        stars.children.iterate(function (child) {
-            child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
-        });
+
     } else if (level == 1) {
         platforms.create(600, 400, "ground");
-        platforms.create(50, 250, "ground");
-        platforms.create(750, 250, "ground");  
-        this.add  
+        platforms.create(60, 250, "ground");
+        platforms.create(750, 250, "ground"); 
+        this.add.image(210, 150, "tenpoints") 
+        stars = this.physics.add.group({
+            key: "star",
+            setXY: {x: 700, y: 150, stepX: 70},
+        });
+        points = this.physics.add.group({
+            key: "point",
+            setXY: {x: 100, y: 100, stepX: 70},
+        });
+
     } else if (level == 2) {
+        this.add.image(450, 170, "badground")
+        badplatforms.create(600, 250, "badplatform");
         platforms.create(100, 400, "ground");
-        platforms.create(650, 250, "ground");
+        platforms.create(800, 250, "ground");
         platforms.create(250, 250, "ground"); 
+        platforms.create(100, 100, "ground");
+        stars = this.physics.add.group({
+            key: "star",
+            setXY: {x: 700, y: 150, stepX: 70},
+        });
+        points = this.physics.add.group({
+            key: "point",
+            setXY: {x: 100, y: 50, stepX: 70},
+        });
     }
 
+    //make the guy
     player = this.physics.add.sprite(100, 450, "dude");
 
+    //this is to make the stars bounce, and allow all of them to have the
+    //same effect when touched.
+    stars.children.iterate(function (child) {
+        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+    })
+    
+    points.children.iterate(function (child) {
+        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+    });
+
+
+
+    //bouncy guy!
     player.setBounce(0.2);
+    
+    //and now he's stuck in the game! >:)
     player.setCollideWorldBounds(true)
 
+    //create the frames for the guy running and not running.
     this.anims.create({
         key: "left",
     
@@ -98,20 +156,32 @@ function create() {
         repeat: -1
     });
 
+    //make the guy stand on platforms and the bad ones kill you!
     this.physics.add.collider(player, platforms);
+    this.physics.add.collider(player, badplatforms, touchBadPlatforms, null, this);
 
+    //set up cursors and keys to actually register keyboard input
     cursors = this.input.keyboard.createCursorKeys();
+    keys = this.input.keyboard.addKeys( { 'lev1':49, 'lev2':50, 'lev3':51, 'lev4':52 } );;
 
 
-
+    //stars and points can now touch the platforms too!
     this.physics.add.collider(stars, platforms);
+    this.physics.add.collider(points, platforms);
+    this.physics.add.collider(stars, badplatforms);
+    this.physics.add.collider(points, badplatforms);
 
+    //make the player not have collision with stars and points
     this.physics.add.overlap(player, stars, collectStar, null, this);
+    this.physics.add.overlap(player, points, collectPoint, null, this);
 
-    scoreText = this.add.text(16, 16, "score: 0", {fontSize: "32px", fill: "#000" });
+    //pretty obvious. adds the score text.
+    scoreText = this.add.text(16, 16, "score: 0", {fontSize: "16px", fill: "#000" });
 
+    //for bombs. makes them a group and then adds collision
     bombs = this.physics.add.group();
     this.physics.add.collider(bombs, platforms);    
+    this.physics.add.collider(bombs, badplatforms);    
     this.physics.add.collider(player, bombs, hitBomb, null, this);    
 };
 
@@ -119,7 +189,7 @@ function create() {
 
 
 function update() {
-
+    //makes it so that when you press keys, stuff happens.
     if (cursors.left.isDown) {
         player.setVelocityX(-160);
 
@@ -128,32 +198,79 @@ function update() {
         player.setVelocityX(160);
 
         player.anims.play("right", true);
+    } else if (cursors.down.isDown) {
+        player.setVelocityY(500);
+
+        player.anims.play("turn");
     } else {
         player.setVelocityX(0);
 
         player.anims.play("turn");
     }
 
+    //only jump if you'' re on the ground
     if (cursors.up.isDown && player.body.touching.down) {
-        player.setVelocityY(-330);
+        player.setVelocityY(-660);
     }
+
+
+    //this is for skipping to levels. 
+    if (keys.lev1.isDown) {
+        level = 1;
+        this.scene.stop();
+        this.scene.start();
+    }
+    if (keys.lev2.isDown) {
+        level = 2;
+        this.scene.stop();
+        this.scene.start();
+    }
+    if (keys.lev3.isDown) {
+        level = 3;
+        this.scene.stop();
+        this.scene.start();
+    }
+    if (keys.lev4.isDown) {
+        level = 4;
+        this.scene.stop();
+        this.scene.start();
+    }
+
 
 };
 
+
+//if you collect a star, go to the next level
 function collectStar(player, star) {
     star.disableBody(true, true)
 
-    score += 10;
-    scoreText.setText("Score: " + score);
     level++;
     this.scene.stop();
     this.scene.start();
 }
 
+//if you get points, make the points counter go up.
+function collectPoint(player, point) {
+    point.disableBody(true, true)
+
+    score += 10;
+    scoreText.setText("Points: " + score);
+};
+
+//if you're hit with a bomb, the game stops.
 function hitBomb(player, bomb) {
     this.physics.pause();
     player.setTint(0xff0000);
     player.anims.play("turn");
 
-    gameOver = true;
-}
+    this.add.image(400, 300, "gameover")
+};
+
+function touchBadPlatforms() {
+    this.physics.pause();
+    player.setTint(0xff0000);
+    player.anims.play("turn");
+
+    this.add.image(400, 300, "gameover")
+
+};
