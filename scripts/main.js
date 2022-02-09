@@ -21,6 +21,7 @@ let config = {
 //level is to define what level it is, 0 is title screen.
 let game = new Phaser.Game(config);
 let platforms;
+let movingplatforms;
 let player;
 let cursors;
 let keys;
@@ -30,20 +31,31 @@ let score = 0;
 let scoreText = "";
 let bombs;
 let level = 0;
+let dy = 2
+let controlsup = false;
+
+
 
 //preloads all the images in the /assets folder.
 function preload() {
     this.load.image("sky", "assets/sky.png");
+
     this.load.image("title", "assets/title.png");
-    this.load.image("ground", "assets/platform.png");
-    this.load.image("star", "assets/star.png");
-    this.load.image("badground", "assets/badground.png");
-    this.load.image("bomb", "assets/bomb.png");
-    this.load.image("point", "assets/point.png");
     this.load.image("gameover", "assets/gameover.png");
     this.load.image("tenpoints", "assets/tenpoints.png");
     this.load.image("controls", "assets/controls.png");
+    this.load.image("badground", "assets/badground.png");
+    this.load.image("controlbutton", "assets/controlbutton.png");
+    this.load.image("backbutton", "assets/backbutton.png");
+
+    this.load.image("ground", "assets/platform.png");
+    this.load.image("movingground", "assets/movingplatform.png");
+    this.load.image("movingground2", "assets/movingplatform2.png");
     this.load.image("badplatform", "assets/badplatform.png");
+
+    this.load.image("star", "assets/star.png");
+    this.load.image("point", "assets/point.png");
+    this.load.image("bomb", "assets/bomb.png");
     this.load.spritesheet("dude", "assets/dude.png", 
         { frameWidth: 32, frameHeight: 48 });
 }
@@ -53,7 +65,8 @@ function create() {
     
     platforms = this.physics.add.staticGroup();
     badplatforms = this.physics.add.staticGroup();
-
+    movingplatforms = this.physics.add.group({allowGravity: false, immovable: false});
+    
     //makes it so the game doesn't crash when there isn't a star or point
     stars = this.physics.add.group({
         key: "star",
@@ -69,11 +82,22 @@ function create() {
     platforms.create(400, 568, "ground").setScale(2).refreshBody();
     if (level == 0) {
         this.add.image(400, 150, "title")
-        this.add.image(400, 350, "controls")
         stars = this.physics.add.group({
             key: "star",
             setXY: {x: 600, y: 500, stepX: 70}     
-        })
+        });
+
+        const controlsButton = this.add.image(400, 570, "controlbutton");
+        controlsButton.setInteractive();
+        controlsButton.on("pointerdown", ()=> {if (controlsup == false) {
+            this.add.image(400, 300, "controls"), 
+            this.add.image(400, 570, "backbutton"), 
+            controlsup = true
+            } else { 
+                   
+                this.scene.stop();
+                controlsup = false;
+                this.scene.start();}});
 
     } else if (level == 1) {
         platforms.create(600, 400, "ground");
@@ -99,6 +123,35 @@ function create() {
         stars = this.physics.add.group({
             key: "star",
             setXY: {x: 700, y: 150, stepX: 70},
+        });
+        points = this.physics.add.group({
+            key: "point",
+            setXY: {x: 100, y: 50, stepX: 70},
+        });
+    } else if (level == 3) {
+        movingplatforms.create(600, 315, "movingground2")
+        platforms.create(900, 450, "ground");
+        platforms.create(700, 150, "ground");
+        platforms.create(250, 300, "ground"); 
+        platforms.create(100, 150, "ground");
+        stars = this.physics.add.group({
+            key: "star",
+            setXY: {x: 700, y: 50, stepX: 70},
+        });
+        points = this.physics.add.group({
+            key: "point",
+            setXY: {x: 100, y: 50, stepX: 70},
+        });
+    } else if (level == 4) {
+        movingplatforms.create(250, 450, "movingground2")
+        movingplatforms.create(400, 350, "movingground2")
+        movingplatforms.create(550, 250, "movingground2")
+        movingplatforms.create(650, 150, "movingground2")
+        platforms.create(900, 100, "ground")
+
+        stars = this.physics.add.group({
+            key: "star",
+            setXY: {x: 750, y: 50, stepX: 70},
         });
         points = this.physics.add.group({
             key: "point",
@@ -159,10 +212,11 @@ function create() {
     //make the guy stand on platforms and the bad ones kill you!
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(player, badplatforms, touchBadPlatforms, null, this);
+    this.physics.add.collider(player, movingplatforms, touchMovingPlatforms);
 
     //set up cursors and keys to actually register keyboard input
     cursors = this.input.keyboard.createCursorKeys();
-    keys = this.input.keyboard.addKeys( { 'lev1':49, 'lev2':50, 'lev3':51, 'lev4':52 } );;
+    keys = this.input.keyboard.addKeys( { 'lev1':49, 'lev2':50, 'lev3':51, 'lev4':52, 'reset':82 } );;
 
 
     //stars and points can now touch the platforms too!
@@ -176,12 +230,13 @@ function create() {
     this.physics.add.overlap(player, points, collectPoint, null, this);
 
     //pretty obvious. adds the score text.
-    scoreText = this.add.text(16, 16, "score: 0", {fontSize: "16px", fill: "#000" });
+    scoreText = this.add.text(16, 16, "score: " + score, {fontSize: "16px", fill: "#000" });
 
     //for bombs. makes them a group and then adds collision
     bombs = this.physics.add.group();
     this.physics.add.collider(bombs, platforms);    
     this.physics.add.collider(bombs, badplatforms);    
+    this.physics.add.collider(bombs, movingplatforms);    
     this.physics.add.collider(player, bombs, hitBomb, null, this);    
 };
 
@@ -235,6 +290,15 @@ function update() {
         this.scene.stop();
         this.scene.start();
     }
+    if (keys.reset.isDown) {
+        this.scene.stop();
+        this.scene.start();
+    }
+
+    if (level == 3) {
+    }
+
+    
 
 
 };
@@ -274,3 +338,7 @@ function touchBadPlatforms() {
     this.add.image(400, 300, "gameover")
 
 };
+
+function touchMovingPlatforms() {
+    movingplatforms.immovable = true
+}
