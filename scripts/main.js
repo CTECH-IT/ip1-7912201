@@ -24,12 +24,15 @@ let stars;
 let score = 0;
 let scoreText = "";
 let bombs;
+let level = 0;
 
 function preload() {
     this.load.image("sky", "assets/sky.png");
+    this.load.image("title", "assets/title.png");
     this.load.image("ground", "assets/platform.png");
     this.load.image("star", "assets/star.png");
     this.load.image("bomb", "assets/bomb.png");
+    this.load.image("controls", "assets/controls.png");
     this.load.spritesheet("dude", "assets/dude.png", 
         { frameWidth: 32, frameHeight: 48 });
 }
@@ -40,10 +43,27 @@ function create() {
     platforms = this.physics.add.staticGroup();
 
     platforms.create(400, 568, "ground").setScale(2).refreshBody();
-
-    platforms.create(600, 400, "ground");
-    platforms.create(50, 250, "ground");
-    platforms.create(750, 250, "ground");    
+    if (level == 0) {
+        this.add.image(400, 200, "title")
+        this.add.image(400, 350, "controls")
+        stars = this.physics.add.group({
+            key: "star",
+            repeat: 0,
+            setXY: {x: 600, y: 500, stepX: 70}
+        })
+        stars.children.iterate(function (child) {
+            child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+        });
+    } else if (level == 1) {
+        platforms.create(600, 400, "ground");
+        platforms.create(50, 250, "ground");
+        platforms.create(750, 250, "ground");  
+        this.add  
+    } else if (level == 2) {
+        platforms.create(100, 400, "ground");
+        platforms.create(650, 250, "ground");
+        platforms.create(250, 250, "ground"); 
+    }
 
     player = this.physics.add.sprite(100, 450, "dude");
 
@@ -82,14 +102,7 @@ function create() {
 
     cursors = this.input.keyboard.createCursorKeys();
 
-    stars = this.physics.add.group({
-        key: "star",
-        repeat: 11,
-        setXY: {x: 12, y: 0, stepX: 70}
-    })
-    stars.children.iterate(function (child) {
-        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
-    });
+
 
     this.physics.add.collider(stars, platforms);
 
@@ -132,19 +145,9 @@ function collectStar(player, star) {
 
     score += 10;
     scoreText.setText("Score: " + score);
-
-    if(stars.countActive(true) === 0) {
-        stars.children.iterate(function (child) {
-            child.enableBody(true, child.x, 0, true, true);
-        });
-
-        var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-
-        var bomb = bombs.create(x, 16, "bomb");
-        bomb.setBounce(1);
-        bomb.setCollideWorldBounds(true);
-        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-    }
+    level++;
+    this.scene.stop();
+    this.scene.start();
 }
 
 function hitBomb(player, bomb) {
