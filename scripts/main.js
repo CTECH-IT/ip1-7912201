@@ -1,4 +1,4 @@
-//config for phaser - canvas 600x600, arcade physics, gravity and set the scane
+//config for phaser - canvas 800x600, arcade physics, gravity and set the scane
 let config = {
     type: Phaser.AUTO,
     width: 800,
@@ -31,8 +31,12 @@ let score = 0;
 let scoreText = "";
 let bombs;
 let level = 0;
-let dy = 2
+let dy = -50;
+let playerdy = 160;
+let playerjump = 600;
 let controlsup = false;
+let clock = 0;
+let clockText = "";
 
 
 
@@ -49,6 +53,8 @@ function preload() {
     this.load.image("backbutton", "assets/backbutton.png");
 
     this.load.image("ground", "assets/platform.png");
+    this.load.image("smallground", "assets/smallplatform.png");
+    this.load.image("verticalground", "assets/verticalplatform.png");
     this.load.image("movingground", "assets/movingplatform.png");
     this.load.image("movingground2", "assets/movingplatform2.png");
     this.load.image("badplatform", "assets/badplatform.png");
@@ -60,13 +66,20 @@ function preload() {
         { frameWidth: 32, frameHeight: 48 });
 }
 
+
+
+
+
+
 function create() {
+
     this.add.image(400, 300, "sky")
     
     platforms = this.physics.add.staticGroup();
     badplatforms = this.physics.add.staticGroup();
     movingplatforms = this.physics.add.group({allowGravity: false, immovable: false});
-    
+    platformsmoving = this.physics.add.group({allowGravity: false, immovable: true});
+
     //makes it so the game doesn't crash when there isn't a star or point
     stars = this.physics.add.group({
         key: "star",
@@ -79,7 +92,14 @@ function create() {
 
     //if level is 0, add the title, controls, and star.
     //else if the level is x, make level x
-    platforms.create(400, 568, "ground").setScale(2).refreshBody();
+    if (level != 10) {
+        playerdy = 160;
+        playerjump = 600;
+        platforms.create(400, 568, "ground").setScale(2).refreshBody();
+    } else {
+        platforms.create(200, 584, "ground");
+        platforms.create(600, 584, "ground");
+    }
     if (level == 0) {
         this.add.image(400, 150, "title")
         stars = this.physics.add.group({
@@ -108,10 +128,11 @@ function create() {
             key: "star",
             setXY: {x: 700, y: 150, stepX: 70},
         });
-        points = this.physics.add.group({
-            key: "point",
-            setXY: {x: 100, y: 100, stepX: 70},
-        });
+        if (score < 10) {
+            points = this.physics.add.group({
+                key: "point",
+                setXY: {x: 100, y: 100, stepX: 70},
+        })};
 
     } else if (level == 2) {
         this.add.image(450, 170, "badground")
@@ -124,10 +145,11 @@ function create() {
             key: "star",
             setXY: {x: 700, y: 150, stepX: 70},
         });
-        points = this.physics.add.group({
-            key: "point",
-            setXY: {x: 100, y: 50, stepX: 70},
-        });
+        if (score < 20) {
+            points = this.physics.add.group({
+                key: "point",
+                setXY: {x: 100, y: 50, stepX: 70},
+        })}
     } else if (level == 3) {
         movingplatforms.create(600, 315, "movingground2")
         platforms.create(900, 450, "ground");
@@ -138,10 +160,11 @@ function create() {
             key: "star",
             setXY: {x: 700, y: 50, stepX: 70},
         });
-        points = this.physics.add.group({
-            key: "point",
-            setXY: {x: 100, y: 50, stepX: 70},
-        });
+        if (score < 30) {
+            points = this.physics.add.group({
+                key: "point",
+                setXY: {x: 100, y: 50, stepX: 70},
+        })}
     } else if (level == 4) {
         movingplatforms.create(250, 450, "movingground2")
         movingplatforms.create(400, 350, "movingground2")
@@ -153,15 +176,52 @@ function create() {
             key: "star",
             setXY: {x: 750, y: 50, stepX: 70},
         });
-        points = this.physics.add.group({
-            key: "point",
-            setXY: {x: 100, y: 50, stepX: 70},
+        if (score < 40) {
+            points = this.physics.add.group({
+                key: "point",
+                setXY: {x: 100, y: 50, stepX: 70},
+        })}
+    } else if (level == 5) {
+        platformsmoving.y = 300
+        platformsmoving.create(800, 300, "ground")
+        platforms.create(-100, 100, "ground")
+        platforms.create(400, 100, "smallground");
+        platforms.create(275, 100, "smallground");
+        platforms.create(584, 216, "verticalground");
+        platforms.create(584, 184, "verticalground");
+        platforms.create(200, 300, "ground");
+        platforms.create(368, 300, "ground");
+        platforms.create(300, 0, "verticalground");
+        stars = this.physics.add.group({
+            key: "star",
+            setXY: {x: 50, y: 50, stepX: 70},
         });
+        if (score < 50) {
+            points = this.physics.add.group({
+                key: "point",
+                setXY: {x: 775, y: 500, stepX: 70},
+        })}
+    } else if (level == 10) {
+        playerdy = 80
+        playerjump = 500
+        player = this.physics.add.sprite(100, 450, "dude").setScale(0.5);
+
+
+        stars = this.physics.add.group({
+            key: "star",
+            setXY: {x: 50, y: 50, stepX: 70},
+        });
+        if (score < 50) {
+            points = this.physics.add.group({
+                key: "point",
+                setXY: {x: 775, y: 500, stepX: 70},
+        })}
     }
 
     //make the guy
-    player = this.physics.add.sprite(100, 450, "dude");
-
+    if (level != 10) {
+        player = this.physics.add.sprite(100, 450, "dude");
+    }
     //this is to make the stars bounce, and allow all of them to have the
     //same effect when touched.
     stars.children.iterate(function (child) {
@@ -213,10 +273,11 @@ function create() {
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(player, badplatforms, touchBadPlatforms, null, this);
     this.physics.add.collider(player, movingplatforms, touchMovingPlatforms);
+    this.physics.add.collider(player, platformsmoving);
 
     //set up cursors and keys to actually register keyboard input
     cursors = this.input.keyboard.createCursorKeys();
-    keys = this.input.keyboard.addKeys( { 'lev1':49, 'lev2':50, 'lev3':51, 'lev4':52, 'reset':82 } );;
+    keys = this.input.keyboard.addKeys( { "reset":82, "lev1":49, "lev2":50, "lev3":51, "lev4":52,"lev5":53, "lev6":54, "lev7":55, "lev8":56, "lev9":57, "lev10":48 } );;
 
 
     //stars and points can now touch the platforms too!
@@ -230,7 +291,10 @@ function create() {
     this.physics.add.overlap(player, points, collectPoint, null, this);
 
     //pretty obvious. adds the score text.
-    scoreText = this.add.text(16, 16, "score: " + score, {fontSize: "16px", fill: "#000" });
+    scoreText = this.add.text(16, 16, "Points: " + score, {fontSize: "16px", fill: "#000" });
+
+    //timer
+    clockText = this.add.text(684, 16, "Time: " + clock, {fontSize: "16px", fill: "#000" });
 
     //for bombs. makes them a group and then adds collision
     bombs = this.physics.add.group();
@@ -243,18 +307,47 @@ function create() {
 
 
 
+
+
+
+
+
+
+
+
+
+
 function update() {
+
+    //timer is in ms or something, divide by 60 to get seconds
+    clock++
+    clockText.setText("Time: " + Math.floor(clock / 60));
+
+    platformsmoving.y += dy;
+
+    //moving platform in level 5
+    if (platformsmoving.y <= -10000 || platformsmoving.y >= 10000) {
+        dy = -dy
+    }
+    platformsmoving.setVelocityY(dy)
+
+
+
+
+
     //makes it so that when you press keys, stuff happens.
     if (cursors.left.isDown) {
         player.setVelocityX(-160);
+        console.log(platformsmoving.y)
+
 
         player.anims.play("left", true);
     } else if (cursors.right.isDown) {
-        player.setVelocityX(160);
+        player.setVelocityX(playerdy);
 
         player.anims.play("right", true);
     } else if (cursors.down.isDown) {
-        player.setVelocityY(500);
+        player.setVelocityY(-playerdy);
 
         player.anims.play("turn");
     } else {
@@ -265,7 +358,7 @@ function update() {
 
     //only jump if you'' re on the ground
     if (cursors.up.isDown && player.body.touching.down) {
-        player.setVelocityY(-660);
+        player.setVelocityY(-playerjump);
     }
 
 
@@ -287,6 +380,36 @@ function update() {
     }
     if (keys.lev4.isDown) {
         level = 4;
+        this.scene.stop();
+        this.scene.start();
+    }
+    if (keys.lev5.isDown) {
+        level = 5;
+        this.scene.stop();
+        this.scene.start();
+    }
+    if (keys.lev6.isDown) {
+        level = 6;
+        this.scene.stop();
+        this.scene.start();
+    }
+    if (keys.lev7.isDown) {
+        level = 7;
+        this.scene.stop();
+        this.scene.start();
+    }
+    if (keys.lev8.isDown) {
+        level = 8;
+        this.scene.stop();
+        this.scene.start();
+    }
+    if (keys.lev9.isDown) {
+        level = 9;
+        this.scene.stop();
+        this.scene.start();
+    }
+    if (keys.lev10.isDown) {
+        level = 10;
         this.scene.stop();
         this.scene.start();
     }
