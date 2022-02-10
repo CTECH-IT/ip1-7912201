@@ -73,6 +73,8 @@ function preload() {
 
 function create() {
 
+    alert("point counter, each orb adds 100 to it or something. Restarting brings back the orb.")
+
     this.add.image(400, 300, "sky")
     
     platforms = this.physics.add.staticGroup();
