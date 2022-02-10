@@ -33,7 +33,7 @@ let bombs;
 let level = 0;
 let dy = -50;
 let playerdy = 160;
-let playerjump = 600;
+let playerjump = 660;
 let controlsup = false;
 let clock = 0;
 let clockText = "";
@@ -94,7 +94,7 @@ function create() {
     //else if the level is x, make level x
     if (level != 10) {
         playerdy = 160;
-        playerjump = 600;
+        playerjump = 660;
         platforms.create(400, 568, "ground").setScale(2).refreshBody();
     } else {
         platforms.create(200, 584, "ground");
