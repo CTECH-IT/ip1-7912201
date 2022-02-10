@@ -37,6 +37,7 @@ let playerjump = 660;
 let controlsup = false;
 let clock = 0;
 let clockText = "";
+let touchingconveyor;
 
 
 
@@ -54,6 +55,7 @@ function preload() {
 
     this.load.image("ground", "assets/platform.png");
     this.load.image("smallground", "assets/smallplatform.png");
+    this.load.image("conveyor", "assets/conveyor.png");
     this.load.image("verticalground", "assets/verticalplatform.png");
     this.load.image("movingground", "assets/movingplatform.png");
     this.load.image("movingground2", "assets/movingplatform2.png");
@@ -73,12 +75,13 @@ function preload() {
 
 function create() {
 
-    alert("point counter, each orb adds 100 to it or something. Restarting brings back the orb.")
+    //alert("point counter, each orb adds 100 to it or something. Restarting brings back the orb.")
 
     this.add.image(400, 300, "sky")
     
     platforms = this.physics.add.staticGroup();
     badplatforms = this.physics.add.staticGroup();
+    conveyors = this.physics.add.staticGroup();
     movingplatforms = this.physics.add.group({allowGravity: false, immovable: false});
     platformsmoving = this.physics.add.group({allowGravity: false, immovable: true});
 
@@ -97,7 +100,12 @@ function create() {
     if (level != 10) {
         playerdy = 160;
         playerjump = 660;
-        platforms.create(400, 568, "ground").setScale(2).refreshBody();
+        if (level != 4) {
+            platforms.create(400, 568, "ground").setScale(2).refreshBody();
+        } else {
+            badplatforms.create(400, 568, "badplatform").setScale(2).refreshBody();
+            platforms.create(-200, 568, "ground").setScale(2).refreshBody();
+        }
     } else {
         platforms.create(200, 584, "ground");
         platforms.create(600, 584, "ground");
@@ -172,7 +180,10 @@ function create() {
         movingplatforms.create(400, 350, "movingground2")
         movingplatforms.create(550, 250, "movingground2")
         movingplatforms.create(650, 150, "movingground2")
+        movingplatforms.create(250, 150, "movingground2")
+
         platforms.create(900, 100, "ground")
+        platforms.create(-100, 300, "ground")
 
         stars = this.physics.add.group({
             key: "star",
@@ -181,19 +192,19 @@ function create() {
         if (score < 40) {
             points = this.physics.add.group({
                 key: "point",
-                setXY: {x: 100, y: 50, stepX: 70},
+                setXY: {x: 50, y: 200, stepX: 70},
         })}
     } else if (level == 5) {
         platformsmoving.y = 300
         platformsmoving.create(800, 300, "ground")
-        platforms.create(-100, 100, "ground")
+        platforms.create(-100, 150, "ground")
         platforms.create(400, 100, "smallground");
         platforms.create(275, 100, "smallground");
         platforms.create(584, 216, "verticalground");
         platforms.create(584, 184, "verticalground");
-        platforms.create(200, 300, "ground");
+        platforms.create(200, 300, "badplatform");
         platforms.create(368, 300, "ground");
-        platforms.create(300, 0, "verticalground");
+        platforms.create(400, 0, "verticalground");
         stars = this.physics.add.group({
             key: "star",
             setXY: {x: 50, y: 50, stepX: 70},
@@ -201,7 +212,24 @@ function create() {
         if (score < 50) {
             points = this.physics.add.group({
                 key: "point",
-                setXY: {x: 775, y: 500, stepX: 70},
+                setXY: {x: 300, y: 50, stepX: 70},
+        })}
+    } else if (level == 6) {
+        movingplatforms.create(275, 400, "movingground2")
+        movingplatforms.create(775, 200, "movingground2")
+        platforms.create(550, 125, "smallground")
+        platforms.create(250, 425, "smallground")
+        conveyors.create(300, 300, "conveyor")
+        platforms.create(165, 509, "verticalground")
+
+        stars = this.physics.add.group({
+            key: "star",
+            setXY: {x: 650, y: 50, stepX: 70},
+        });
+        if (score < 60) {
+            points = this.physics.add.group({
+                key: "point",
+                setXY: {x: 600, y: 50, stepX: 70},
         })}
     } else if (level == 10) {
         playerdy = 80
@@ -216,9 +244,18 @@ function create() {
         if (score < 50) {
             points = this.physics.add.group({
                 key: "point",
-                setXY: {x: 775, y: 500, stepX: 70},
+                setXY: {x: 775, y: 600, stepX: 70},
         })}
-    }
+    } 
+
+
+
+
+
+
+
+
+
 
     //make the guy
     if (level != 10) {
@@ -272,7 +309,8 @@ function create() {
     });
 
     //make the guy stand on platforms and the bad ones kill you!
-    this.physics.add.collider(player, platforms);
+    this.physics.add.collider(player, platforms, notonconveyor);
+    this.physics.add.collider(player, conveyors, touchconveyor);
     this.physics.add.collider(player, badplatforms, touchBadPlatforms, null, this);
     this.physics.add.collider(player, movingplatforms, touchMovingPlatforms);
     this.physics.add.collider(player, platformsmoving);
@@ -339,9 +377,12 @@ function update() {
 
     //makes it so that when you press keys, stuff happens.
     if (cursors.left.isDown) {
-        player.setVelocityX(-160);
-        console.log(platformsmoving.y)
+        if (player.body.touching.conveyors) {
+            player.setVelocityX((-2) * playerdy);
+        } else {
+            player.setVelocityX(-playerdy);
 
+        }
 
         player.anims.play("left", true);
     } else if (cursors.right.isDown) {
@@ -349,7 +390,7 @@ function update() {
 
         player.anims.play("right", true);
     } else if (cursors.down.isDown) {
-        player.setVelocityY(-playerdy);
+        player.setVelocityY(3 * playerjump);
 
         player.anims.play("turn");
     } else {
@@ -466,4 +507,12 @@ function touchBadPlatforms() {
 
 function touchMovingPlatforms() {
     movingplatforms.immovable = true
+}
+
+function touchconveyor() {
+    playerdy = 260;
+}
+
+function notonconveyor() {
+    playerdy = 160;
 }
