@@ -38,6 +38,8 @@ let controlsup = false;
 let clock = 0;
 let clockText = "";
 let touchingconveyor;
+let spawnpoint = false;
+let clockon = true;
 
 
 
@@ -49,23 +51,44 @@ function preload() {
     this.load.image("gameover", "assets/gameover.png");
     this.load.image("tenpoints", "assets/tenpoints.png");
     this.load.image("controls", "assets/controls.png");
+    this.load.image("gettowin", "assets/gettowin.png");
+    this.load.image("andjump", "assets/andjump.png");
+    this.load.image("push", "assets/push.png");
     this.load.image("badground", "assets/badground.png");
     this.load.image("controlbutton", "assets/controlbutton.png");
     this.load.image("backbutton", "assets/backbutton.png");
+    this.load.image("youwin", "assets/youwin.png");
+    this.load.image("credits", "assets/credits.png");
 
     this.load.image("ground", "assets/platform.png");
     this.load.image("smallground", "assets/smallplatform.png");
-    this.load.image("conveyor", "assets/conveyor.png");
     this.load.image("verticalground", "assets/verticalplatform.png");
     this.load.image("movingground", "assets/movingplatform.png");
     this.load.image("movingground2", "assets/movingplatform2.png");
+    this.load.image("tinyplatform", "assets/tinyplatform.png");
     this.load.image("badplatform", "assets/badplatform.png");
 
     this.load.image("star", "assets/star.png");
     this.load.image("point", "assets/point.png");
     this.load.image("bomb", "assets/bomb.png");
+
+    this.load.image("zero", "assets/zero.png");
+    this.load.image("neg1", "assets/neg1.png");
+    this.load.image("10", "assets/10.png");
+    this.load.image("20", "assets/20.png");
+    this.load.image("30", "assets/30.png");
+    this.load.image("40", "assets/40.png");
+    this.load.image("50", "assets/50.png");
+    this.load.image("60", "assets/60.png");
+    this.load.image("70", "assets/70.png");
+    this.load.image("80", "assets/80.png");
+    this.load.image("90", "assets/90.png");
+    this.load.image("100", "assets/100.png");
+
     this.load.spritesheet("dude", "assets/dude.png", 
         { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet("conveyor", "assets/conveyors.png", 
+        { frameWidth: 147, frameHeight: 32 });
 }
 
 
@@ -74,6 +97,7 @@ function preload() {
 
 
 function create() {
+
 
     //alert("point counter, each orb adds 100 to it or something. Restarting brings back the orb.")
 
@@ -97,14 +121,14 @@ function create() {
 
     //if level is 0, add the title, controls, and star.
     //else if the level is x, make level x
-    if (level != 10) {
+    if (level != 8) {
         playerdy = 160;
         playerjump = 660;
-        if (level != 4) {
-            platforms.create(400, 568, "ground").setScale(2).refreshBody();
-        } else {
+        if ((level == 4) || (level == 7)) {
             badplatforms.create(400, 568, "badplatform").setScale(2).refreshBody();
             platforms.create(-200, 568, "ground").setScale(2).refreshBody();
+        } else {
+            platforms.create(400, 568, "ground").setScale(2).refreshBody();
         }
     } else {
         platforms.create(200, 584, "ground");
@@ -131,14 +155,15 @@ function create() {
 
     } else if (level == 1) {
         platforms.create(600, 400, "ground");
-        platforms.create(60, 250, "ground");
+        platforms.create(80, 250, "ground");
         platforms.create(750, 250, "ground"); 
         this.add.image(210, 150, "tenpoints") 
+        this.add.image(250, 180, "gettowin") 
         stars = this.physics.add.group({
             key: "star",
             setXY: {x: 700, y: 150, stepX: 70},
         });
-        if (score < 10) {
+        if (spawnpoint == true) {
             points = this.physics.add.group({
                 key: "point",
                 setXY: {x: 100, y: 100, stepX: 70},
@@ -155,7 +180,7 @@ function create() {
             key: "star",
             setXY: {x: 700, y: 150, stepX: 70},
         });
-        if (score < 20) {
+        if (spawnpoint == true) {
             points = this.physics.add.group({
                 key: "point",
                 setXY: {x: 100, y: 50, stepX: 70},
@@ -170,7 +195,7 @@ function create() {
             key: "star",
             setXY: {x: 700, y: 50, stepX: 70},
         });
-        if (score < 30) {
+        if (spawnpoint == true) {
             points = this.physics.add.group({
                 key: "point",
                 setXY: {x: 100, y: 50, stepX: 70},
@@ -189,7 +214,7 @@ function create() {
             key: "star",
             setXY: {x: 750, y: 50, stepX: 70},
         });
-        if (score < 40) {
+        if (spawnpoint == true) {
             points = this.physics.add.group({
                 key: "point",
                 setXY: {x: 50, y: 200, stepX: 70},
@@ -202,50 +227,133 @@ function create() {
         platforms.create(275, 100, "smallground");
         platforms.create(584, 216, "verticalground");
         platforms.create(584, 184, "verticalground");
-        platforms.create(200, 300, "badplatform");
+        badplatforms.create(200, 300, "badplatform");
         platforms.create(368, 300, "ground");
         platforms.create(400, 0, "verticalground");
         stars = this.physics.add.group({
             key: "star",
             setXY: {x: 50, y: 50, stepX: 70},
         });
-        if (score < 50) {
+        if (spawnpoint == true) {
             points = this.physics.add.group({
                 key: "point",
                 setXY: {x: 300, y: 50, stepX: 70},
         })}
     } else if (level == 6) {
-        movingplatforms.create(275, 400, "movingground2")
-        movingplatforms.create(775, 200, "movingground2")
-        platforms.create(550, 125, "smallground")
+        this.add.image(150, 390, "push")
+        this.add.image(575, 390, "andjump")
+        movingplatforms.create(250, 400, "movingground2")
+        movingplatforms.create(775, 300, "movingground2")
         platforms.create(250, 425, "smallground")
+        platforms.create(875, 140, "smallground")
         conveyors.create(300, 300, "conveyor")
-        platforms.create(165, 509, "verticalground")
+        platforms.create(160, 509, "verticalground")
 
         stars = this.physics.add.group({
             key: "star",
-            setXY: {x: 650, y: 50, stepX: 70},
+            setXY: {x: 788, y: 50, stepX: 70},
         });
-        if (score < 60) {
+        if (spawnpoint == true) {
             points = this.physics.add.group({
                 key: "point",
-                setXY: {x: 600, y: 50, stepX: 70},
+                setXY: {x: 200, y: 500, stepX: 70},
         })}
-    } else if (level == 10) {
+    } else if (level == 7) {
+        platforms.create(250, 475, "tinyplatform")
+        platforms.create(60, 250, "tinyplatform")
+        platforms.create(440, 475, "tinyplatform")
+        platforms.create(630, 475, "tinyplatform")
+        platforms.create(780, 375, "tinyplatform")
+        platforms.create(780, 540, "tinyplatform")
+        platforms.create(250, 250, "tinyplatform")
+        platforms.create(440, 250, "tinyplatform")
+        platforms.create(630, 250, "tinyplatform")
+
+        stars = this.physics.add.group({
+            key: "star",
+            setXY: {x: 60, y: 50, stepX: 70},
+        });
+        if (spawnpoint == true) {
+            points = this.physics.add.group({
+                key: "point",
+                setXY: {x: 780, y: 500, stepX: 70},
+        })}
+    } else if (level == 8) {
         playerdy = 80
         playerjump = 500
         player = this.physics.add.sprite(100, 450, "dude").setScale(0.5);
 
+        platformsmoving.y = 300
+
+        platforms.create(800, 430, "smallground")
+        platformsmoving.create(550, 400, "smallground")
+        platforms.create(600, 500, "smallground")
+        movingplatforms.create(0, 280, "movingground2")
+        platforms.create(200, 200, "smallground")
+        platforms.create(250, 200, "smallground")
+        platforms.create(250, 180, "smallground")
+        platforms.create(800, 230, "smallground")
+        platforms.create(250, 350, "smallground")
+        platforms.create(200, 350, "smallground")
+        platforms.create(200, 330, "smallground")
+        platforms.create(600, 160, "badplatform")
+        badplatforms.create(600, 150, "badplatform")
+        platforms.create(600, 144, "tinyplatform")
+        platforms.create(515, 144, "tinyplatform")
+        platforms.create(430, 144, "tinyplatform")
+
+
 
         stars = this.physics.add.group({
             key: "star",
-            setXY: {x: 50, y: 50, stepX: 70},
+            setXY: {x: 750, y: 50, stepX: 70},
         });
-        if (score < 50) {
+        if (spawnpoint == true) {
             points = this.physics.add.group({
                 key: "point",
-                setXY: {x: 775, y: 600, stepX: 70},
+                setXY: {x: 775, y: 180, stepX: 70},
         })}
+    }  else if (level == 9) {
+        clockon = false;
+        platforms.create(0, 100, "smallground")
+        platforms.create(0, 250, "smallground")
+        platforms.create(0, 400, "smallground")
+        platforms.create(800, 100, "smallground")
+        platforms.create(800, 250, "smallground")
+        platforms.create(800, 400, "smallground")
+
+        this.add.image(400, 250, "youwin")
+        this.add.image(280, 565, "credits").setScale(0.7)
+
+        //to display how much points you got.
+        if (score == 0) {
+            this.add.image(400, 308, "zero")
+        } else if (score == 10) {
+            this.add.image(400, 308, "10")
+        } else if (score == 20) {
+            this.add.image(400, 308, "20")
+        } else if (score == 30) {
+            this.add.image(400, 308, "30")
+        } else if (score == 40) {
+            this.add.image(400, 308, "40")
+        } else if (score == 50) {
+            this.add.image(400, 308, "50")
+        } else if (score == 60) {
+            this.add.image(400, 308, "60")
+        } else if (score == 70) {
+            this.add.image(400, 308, "70")
+        } else if (score == 80) {
+            this.add.image(400, 308, "80")
+        } else if (score == 90) {
+            this.add.image(400, 308, "90")
+        } else if (score == 100) {
+            this.add.image(400, 308, "100")
+        } else {
+            this.add.image(430, 328, "neg1")
+        }
+
+
+
     } 
 
 
@@ -258,7 +366,7 @@ function create() {
 
 
     //make the guy
-    if (level != 10) {
+    if (level != 8) {
         player = this.physics.add.sprite(100, 450, "dude");
     }
     //this is to make the stars bounce, and allow all of them to have the
@@ -308,6 +416,16 @@ function create() {
         repeat: -1
     });
 
+    this.anims.create({
+        key: "conveyorkey",
+    
+        frames: this.anims.generateFrameNumbers("conveyor", { start: 1, end: 2}),
+    
+        frameRate: 10,
+    
+        repeat: -1
+    });
+
     //make the guy stand on platforms and the bad ones kill you!
     this.physics.add.collider(player, platforms, notonconveyor);
     this.physics.add.collider(player, conveyors, touchconveyor);
@@ -317,7 +435,7 @@ function create() {
 
     //set up cursors and keys to actually register keyboard input
     cursors = this.input.keyboard.createCursorKeys();
-    keys = this.input.keyboard.addKeys( { "reset":82, "lev1":49, "lev2":50, "lev3":51, "lev4":52,"lev5":53, "lev6":54, "lev7":55, "lev8":56, "lev9":57, "lev10":48 } );;
+    keys = this.input.keyboard.addKeys( { "reset":82, /*"lev1":49, "lev2":50, "lev3":51, "lev4":52,"lev5":53, "lev6":54, "lev7":55, "lev8":56, "lev9":57, "lev10":48 */ } );;
 
 
     //stars and points can now touch the platforms too!
@@ -359,16 +477,30 @@ function create() {
 
 function update() {
 
+
+
     //timer is in ms or something, divide by 60 to get seconds
-    clock++
-    clockText.setText("Time: " + Math.floor(clock / 60));
+    if (clockon == true) {
+        clock++
+        clockText.setText("Time: " + Math.floor(clock / 60));
+    } else {
+        clockText.setText("Time: " + Math.floor(clock / 60));        
+    }
 
     platformsmoving.y += dy;
 
     //moving platform in level 5
-    if (platformsmoving.y <= -10000 || platformsmoving.y >= 10000) {
-        dy = -dy
+    if (level != 8) {
+        if (platformsmoving.y <= -10000 || platformsmoving.y >= 10000) {
+            dy = -dy
+        }
+    } else {
+        if (platformsmoving.y <= -8000 || platformsmoving.y >= 1000) {
+            dy = -dy
+        }
     }
+
+    //make the moving platforms move at dy speed
     platformsmoving.setVelocityY(dy)
 
 
@@ -388,9 +520,13 @@ function update() {
     } else if (cursors.right.isDown) {
         player.setVelocityX(playerdy);
 
+
+
         player.anims.play("right", true);
     } else if (cursors.down.isDown) {
         player.setVelocityY(3 * playerjump);
+        console.log(spawnpoint)
+
 
         player.anims.play("turn");
     } else {
@@ -399,12 +535,14 @@ function update() {
         player.anims.play("turn");
     }
 
+    
+
     //only jump if you'' re on the ground
     if (cursors.up.isDown && player.body.touching.down) {
         player.setVelocityY(-playerjump);
     }
 
-
+/*
     //this is for skipping to levels. 
     if (keys.lev1.isDown) {
         level = 1;
@@ -456,13 +594,13 @@ function update() {
         this.scene.stop();
         this.scene.start();
     }
+    */
     if (keys.reset.isDown) {
         this.scene.stop();
         this.scene.start();
     }
 
-    if (level == 3) {
-    }
+
 
     
 
@@ -477,6 +615,8 @@ function collectStar(player, star) {
     level++;
     this.scene.stop();
     this.scene.start();
+    console.log("Never Gonna Give You Up...");
+    spawnpoint = true;
 }
 
 //if you get points, make the points counter go up.
@@ -485,6 +625,7 @@ function collectPoint(player, point) {
 
     score += 10;
     scoreText.setText("Points: " + score);
+    spawnpoint = false;
 };
 
 //if you're hit with a bomb, the game stops.
@@ -496,6 +637,7 @@ function hitBomb(player, bomb) {
     this.add.image(400, 300, "gameover")
 };
 
+//if you touch a bad platform, you die
 function touchBadPlatforms() {
     this.physics.pause();
     player.setTint(0xff0000);
@@ -505,14 +647,17 @@ function touchBadPlatforms() {
 
 };
 
+//I have no idea. Make them immovable?
 function touchMovingPlatforms() {
     movingplatforms.immovable = true
 }
 
+//make the guy go faster if on a conveyor
 function touchconveyor() {
     playerdy = 260;
 }
 
+//make the player not go faster if not on a conveyor. 
 function notonconveyor() {
     playerdy = 160;
 }
